@@ -16,14 +16,13 @@
 
 package com.example.android.sunshine.app.gcm;
 
-import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -86,8 +85,7 @@ public class MyGcmListenerService extends GcmListenerService {
      * @param message The alert message to be posted.
      */
     private void sendNotification(String message) {
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         PendingIntent contentIntent =
                 PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
 
@@ -105,6 +103,6 @@ public class MyGcmListenerService extends GcmListenerService {
                         .setContentText(message)
                         .setPriority(NotificationCompat.PRIORITY_HIGH);
         mBuilder.setContentIntent(contentIntent);
-        mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+        notificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 }
