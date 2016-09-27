@@ -3,7 +3,11 @@
     <color name="primary">#03A9F4</color>  <!-- 500 -->
     <color name="primary_dark">#0288D1</color>  <!-- 700 -->
     <color name="primary_light">#B3E5FC</color> <!-- 100 -->
+    <color name="gray_80">#cccccc</color>
 
     <color name="background">@color/primary</color>
-    <color name="digital_text">#ffffff</color>
+    <color name="primary_text">@android:color/white</color>
+    <color name="secondary_text">@color/primary_light</color>
+    <color name="divider">@color/primary_light</color>
+
 </resources>

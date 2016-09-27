@@ -25,7 +25,9 @@ android {
     }
 }
 
-def supportVersion = '24.2.1'
+def supportVersion = '23.3.0'
+// Could not send data to wearable emulator.  Rolled back until it seemed to work.
+def playVersion = '8.4.0'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -36,7 +38,8 @@ dependencies {
     compile "com.android.support:support-v4:$supportVersion"
     compile "com.android.support:design:$supportVersion"
     compile "com.android.support:recyclerview-v7:$supportVersion"
-    compile 'com.google.android.gms:play-services-gcm:9.4.0'
+    compile "com.google.android.gms:play-services-gcm:$playVersion"
+    compile "com.google.android.gms:play-services-wearable:$playVersion"
     compile 'com.github.bumptech.glide:glide:3.5.2'
     compile 'com.google.android.apps.muzei:muzei-api:2.0'
 }

@@ -1,5 +1,11 @@
 <resources>
     <string name="app_name">Sunshine Wearable</string>
     <string name="message">Watch face tapped</string>
-    <string name="my_digital_name">My Digital</string>
+    <string name="my_digital_name">Sunshine Digital</string>
+    <string name="time_format">hh:mm:ss</string>
+    <string name="time_format_24">HH:mm:ss</string>
+    <string name="time_format_ambient">hh:mm</string>
+    <string name="time_format_24_ambient">HH:mm</string>
+    <string name="date_format">EEE, MMM d yyyy</string>
+    <string name="temperature_format">%02d°</string>
 </resources>
