@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sunshine;
+package com.example.android.sunshine.app;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -22,7 +22,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -55,7 +54,6 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -87,6 +85,10 @@ public class WatchFace extends CanvasWatchFaceService {
 
     private static final String DATA_MAP_WEATHER = "/forecast";
     private static final String DATA_MAP_WEATHER_REQUEST = "/forecast_request";
+    private static final String DATA_MAP_WEATHER_KEY_HIGH = "high";
+    private static final String DATA_MAP_WEATHER_KEY_LOW = "low";
+    private static final String DATA_MAP_WEATHER_KEY_ICON = "icon";
+    private static final String DATA_MAP_WEATHER_REQUEST_KEY_GET_WEATHER = "get_weather";
 
     @Override
     public Engine onCreateEngine() {
@@ -114,7 +116,7 @@ public class WatchFace extends CanvasWatchFaceService {
     }
 
     private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener,
-            GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+            GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LoadBitmapTask.LoadBitmapListener {
         final Handler mUpdateTimeHandler = new EngineHandler(this);
         boolean mRegisteredTimeZoneReceiver = false;
         boolean mAmbient;
@@ -152,7 +154,7 @@ public class WatchFace extends CanvasWatchFaceService {
             }
         };
 
-        GoogleApiClient mAPiClient = new GoogleApiClient.Builder(WatchFace.this)
+        GoogleApiClient googleApiClient = new GoogleApiClient.Builder(WatchFace.this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Wearable.API)
@@ -244,7 +246,7 @@ public class WatchFace extends CanvasWatchFaceService {
 
             if (visible) {
                 registerReceiver();
-                mAPiClient.connect();
+                googleApiClient.connect();
 
                 // Update time zone in case it changed while we weren't visible.
                 mCalendar.setTimeZone(TimeZone.getDefault());
@@ -348,6 +350,7 @@ public class WatchFace extends CanvasWatchFaceService {
                     break;
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
+                    getWeatherData();
                     Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
                             .show();
                     break;
@@ -377,17 +380,17 @@ public class WatchFace extends CanvasWatchFaceService {
             String highTemperatureString = String.format(temperatureFormat, highTemperature);
             String lowTemperatureString = String.format(temperatureFormat, lowTemperature);
 
-            timeOffsetX = bounds.centerX() - timePaint.measureText(timeString) / 2f;
-            dateOffsetX = bounds.centerX() - datePaint.measureText(dateString) / 2f;
+            timeOffsetX = bounds.centerX() - (timePaint.measureText(timeString) / 2f);
+            dateOffsetX = bounds.centerX() - (datePaint.measureText(dateString) / 2f);
 
             final int dividerLength = bounds.width() / 5;
             final float dividerOffsetStartX = bounds.centerX() - (dividerLength / 2f);
             final float dividerOffsetEndX = bounds.centerX() + (dividerLength / 2f);
 
-
-            final float highOffsetX = bounds.centerX() - highPaint.measureText(highTemperatureString) / 2f;
-            final float lowOffsetX = bounds.centerX() + bounds.width() / 5f;
-            final float iconOffsetX = bounds.centerX() - bounds.width() / 2.5f;
+            // centered
+            final float highOffsetX = bounds.centerX() - (highPaint.measureText(highTemperatureString) / 2f);
+            // 3/4
+            final float lowOffsetX = (bounds.centerX() + (bounds.centerX() / 2f)) - (lowPaint.measureText(lowTemperatureString) / 2f);
 
             canvas.drawText(timeString, timeOffsetX, timeOffsetY, timePaint);
             canvas.drawText(dateString, dateOffsetX, dateOffsetY, datePaint);
@@ -400,7 +403,11 @@ public class WatchFace extends CanvasWatchFaceService {
                 canvas.drawText(highTemperatureString, highOffsetX, weatherOffsetY, highPaint);
                 canvas.drawText(lowTemperatureString, lowOffsetX, weatherOffsetY, lowPaint);
                 if (weatherBitmap != null) {
-                    canvas.drawBitmap(weatherBitmap, iconOffsetX, weatherOffsetY, highPaint);
+                    // 1/4
+                    final float iconOffsetX = (bounds.centerX() - (bounds.centerX() / 2f)) - (weatherBitmap.getWidth() / 2f);
+                    // top corner of icon drawn at top corner of the temperature text
+                    final float iconOffsetY = weatherOffsetY - highPaint.getTextSize();
+                    canvas.drawBitmap(weatherBitmap, iconOffsetX, iconOffsetY, highPaint);
                 }
             }
 
@@ -441,34 +448,32 @@ public class WatchFace extends CanvasWatchFaceService {
         private void getWeatherData() {
             PutDataMapRequest weatherDataMapRequest = PutDataMapRequest.create(DATA_MAP_WEATHER_REQUEST);
             DataMap weatherRequestDataMap = weatherDataMapRequest.getDataMap();
-            weatherRequestDataMap.putBoolean("get_weather", true);
+            weatherRequestDataMap.putBoolean(DATA_MAP_WEATHER_REQUEST_KEY_GET_WEATHER, true);
             PutDataRequest weatherRequest = weatherDataMapRequest.asPutDataRequest();
             weatherRequest.setUrgent();
-            Wearable.DataApi.putDataItem(mAPiClient, weatherRequest)
+            Wearable.DataApi.putDataItem(googleApiClient, weatherRequest)
                     .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                         @Override
-                        public void onResult(DataApi.DataItemResult dataItemResult) {
+                        public void onResult(@NonNull DataApi.DataItemResult dataItemResult) {
                             if (!dataItemResult.getStatus().isSuccess()) {
-                                Log.d(TAG, "Failed to send weather data");
+                                Log.d(TAG, "Failed to send weather update request");
                             } else {
-                                Log.d(TAG, "Successfully sent weather data");
+                                Log.d(TAG, "Successfully sent weather update request");
                             }
                         }
                     });
-
         }
 
         private void removeDataApiListener() {
-            if (mAPiClient != null && mAPiClient.isConnected()) {
-                Wearable.DataApi.removeListener(mAPiClient, this);
-                mAPiClient.disconnect();
+            if (googleApiClient != null && googleApiClient.isConnected()) {
+                Wearable.DataApi.removeListener(googleApiClient, this);
+                googleApiClient.disconnect();
             }
         }
 
         @Override
         public void onConnected(@Nullable Bundle bundle) {
-            Wearable.DataApi.addListener(mAPiClient, this);
-            getWeatherData();
+            Wearable.DataApi.addListener(googleApiClient, this);
         }
 
         @Override
@@ -483,17 +488,20 @@ public class WatchFace extends CanvasWatchFaceService {
 
         @Override
         public void onDataChanged(DataEventBuffer dataEventBuffer) {
+            Log.d(TAG, "onDataChanged: ");
             for (DataEvent dataEvent : dataEventBuffer) {
                 if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
                     String path = dataEvent.getDataItem().getUri().getPath();
+                    Log.d(TAG, "onDataChanged: " + path);
                     if (path.equals(DATA_MAP_WEATHER)) {
                         DataMapItem dataMapItem = DataMapItem.fromDataItem(dataEvent.getDataItem());
                         DataMap dataMap = dataMapItem.getDataMap();
-                        highTemperature = (int) dataMap.getDouble("high",  Integer.MAX_VALUE);
-                        lowTemperature = (int) dataMap.getDouble("low", Integer.MIN_VALUE);
-                        Asset iconAsset = dataMap.getAsset("icon");
+                        highTemperature = (int) dataMap.getDouble(DATA_MAP_WEATHER_KEY_HIGH,  Integer.MAX_VALUE);
+                        lowTemperature = (int) dataMap.getDouble(DATA_MAP_WEATHER_KEY_LOW, Integer.MIN_VALUE);
+                        Asset iconAsset = dataMap.getAsset(DATA_MAP_WEATHER_KEY_ICON);
                         if (iconAsset != null) {
-//                            weatherBitmap = loadBitmapFromAsset(iconAsset);
+                            LoadBitmapTask loadBitmapTask = new LoadBitmapTask(googleApiClient, this);
+                            loadBitmapTask.execute(iconAsset);
                         }
                         Log.d(TAG, "onDataChanged: high=" + highTemperature + " low=" + lowTemperature);
                         invalidate();
@@ -502,26 +510,10 @@ public class WatchFace extends CanvasWatchFaceService {
             }
         }
 
-        private Bitmap loadBitmapFromAsset(Asset asset) {
-            if (asset == null) {
-                throw new IllegalArgumentException("Asset must be non-null");
-            }
-            ConnectionResult result =
-                    mAPiClient.blockingConnect(1000, TimeUnit.MILLISECONDS);
-            if (!result.isSuccess()) {
-                return null;
-            }
-            // convert asset into a file descriptor and block until it's ready
-            InputStream assetInputStream = Wearable.DataApi.getFdForAsset(
-                    mAPiClient, asset).await().getInputStream();
-            mAPiClient.disconnect();
-
-            if (assetInputStream == null) {
-                Log.w(TAG, "Requested an unknown Asset.");
-                return null;
-            }
-            // decode the stream into a bitmap
-            return BitmapFactory.decodeStream(assetInputStream);
+        @Override
+        public void onLoadBitmapFinished(Bitmap bitmap) {
+            weatherBitmap = bitmap;
+            invalidate();
         }
     }
 }

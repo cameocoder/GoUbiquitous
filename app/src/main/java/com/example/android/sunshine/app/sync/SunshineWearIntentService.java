@@ -41,8 +41,10 @@ public class SunshineWearIntentService extends IntentService implements
     private static final String EXTRA_LOW = "com.example.android.sunshine.app.sync.extra.low";
     private static final String EXTRA_ICON_ID = "com.example.android.sunshine.app.sync.extra.icon_id";
     private static final String DATA_MAP_WEATHER = "/forecast";
+    private static final String DATA_MAP_WEATHER_KEY_HIGH = "high";
+    private static final String DATA_MAP_WEATHER_KEY_LOW = "low";
+    private static final String DATA_MAP_WEATHER_KEY_ICON = "icon";
 
-    private int weatherId = 0;
     private double high = Integer.MAX_VALUE;
     private double low = Integer.MIN_VALUE;
     private int iconId = -1;
@@ -58,10 +60,9 @@ public class SunshineWearIntentService extends IntentService implements
      *
      * @see IntentService
      */
-    public static void startActionWearWeatherUpdate(Context context, int weatherId, double high, double low, int iconId) {
+    public static void startActionWearWeatherUpdate(Context context, double high, double low, int iconId) {
         Intent intent = new Intent(context, SunshineWearIntentService.class);
         intent.setAction(WEATHER_UPDATE);
-        intent.putExtra(EXTRA_ID, weatherId);
         intent.putExtra(EXTRA_HIGH, high);
         intent.putExtra(EXTRA_LOW, low);
         intent.putExtra(EXTRA_ICON_ID, iconId);
@@ -73,11 +74,10 @@ public class SunshineWearIntentService extends IntentService implements
         if (intent != null) {
             final String action = intent.getAction();
             if (WEATHER_UPDATE.equals(action)) {
-                final int weatherId = intent.getIntExtra(EXTRA_ID, 0);
                 final double high = intent.getDoubleExtra(EXTRA_HIGH, Integer.MAX_VALUE);
                 final double low = intent.getDoubleExtra(EXTRA_LOW, Integer.MIN_VALUE);
                 final int iconId = intent.getIntExtra(EXTRA_ICON_ID, -1);
-                handleActionWearWeatherUpdate(weatherId, high, low, iconId);
+                handleActionWearWeatherUpdate(high, low, iconId);
             }
         }
     }
@@ -86,23 +86,23 @@ public class SunshineWearIntentService extends IntentService implements
      * Handle action Foo in the provided background thread with the provided
      * parameters.
      */
-    private void handleActionWearWeatherUpdate(int weatherId, double high, double low, int iconId) {
+    private void handleActionWearWeatherUpdate(double high, double low, int iconId) {
         if (googleApiClient == null) {
             googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(Wearable.API)
                     .build();
-            googleApiClient.connect();
         }
+        googleApiClient.connect();
 
         // Check if anything has changed
-        if ((this.weatherId != weatherId) || (this.high != high) || (this.low != low) || (this.iconId != iconId)) {
+//        if ((this.high != high) || (this.low != low) || (this.iconId != iconId)) {
             PutDataMapRequest weatherDataMapRequest = PutDataMapRequest.create(DATA_MAP_WEATHER);
             DataMap weatherRequestDataMap = weatherDataMapRequest.getDataMap();
-            weatherRequestDataMap.putDouble("high", high);
-            weatherRequestDataMap.putDouble("low", low);
-            weatherRequestDataMap.putAsset("icon", getWeatherIcon(weatherId));
+            weatherRequestDataMap.putDouble(DATA_MAP_WEATHER_KEY_HIGH, high);
+            weatherRequestDataMap.putDouble(DATA_MAP_WEATHER_KEY_LOW, low);
+            weatherRequestDataMap.putAsset(DATA_MAP_WEATHER_KEY_ICON, getWeatherIcon(iconId));
             PutDataRequest weatherRequest = weatherDataMapRequest.asPutDataRequest();
             weatherRequest.setUrgent();
             Wearable.DataApi.putDataItem(googleApiClient, weatherRequest)
@@ -117,8 +117,7 @@ public class SunshineWearIntentService extends IntentService implements
                         }
                     });
             Log.d(TAG, "handleActionWearWeatherUpdate: high=" + high + " low=" + low);
-        }
-        this.weatherId = weatherId;
+//        }
         this.high = high;
         this.low = low;
         this.iconId = iconId;

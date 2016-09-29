@@ -480,7 +480,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     // We just fetched the data we need, so send it to the wear device
                     Log.d(LOG_TAG, "notifyWeather: startActionWearWeatherUpdate");
-                    SunshineWearIntentService.startActionWearWeatherUpdate(context, weatherId, high, low, iconId);
+                    SunshineWearIntentService.startActionWearWeatherUpdate(context, high, low, iconId);
                 }
                 cursor.close();
             }

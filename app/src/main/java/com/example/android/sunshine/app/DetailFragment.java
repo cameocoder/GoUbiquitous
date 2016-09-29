@@ -162,8 +162,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         Uri uri = mUri;
         if (null != uri) {
             long date = WeatherContract.WeatherEntry.getDateFromUri(uri);
-            Uri updatedUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(newLocation, date);
-            mUri = updatedUri;
+            mUri = WeatherEntry.buildWeatherLocationWithDate(newLocation, date);
             getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
         }
     }
@@ -226,9 +225,6 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             // null is appropriate when the image is purely decorative or when the image already
             // has text describing it in the same UI component.
             mIconView.setContentDescription(getString(R.string.a11y_forecast_icon, description));
-
-            // Read high temperature from cursor and update view
-            boolean isMetric = Utility.isMetric(getActivity());
 
             double high = data.getDouble(COL_WEATHER_MAX_TEMP);
             String highString = Utility.formatTemperature(getActivity(), high);
