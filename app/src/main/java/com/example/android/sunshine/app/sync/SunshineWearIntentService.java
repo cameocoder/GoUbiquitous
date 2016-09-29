@@ -22,6 +22,7 @@ import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Date;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -45,9 +46,6 @@ public class SunshineWearIntentService extends IntentService implements
     private static final String DATA_MAP_WEATHER_KEY_LOW = "low";
     private static final String DATA_MAP_WEATHER_KEY_ICON = "icon";
 
-    private double high = Integer.MAX_VALUE;
-    private double low = Integer.MIN_VALUE;
-    private int iconId = -1;
     private GoogleApiClient googleApiClient;
 
     public SunshineWearIntentService() {
@@ -96,31 +94,28 @@ public class SunshineWearIntentService extends IntentService implements
         }
         googleApiClient.connect();
 
-        // Check if anything has changed
-//        if ((this.high != high) || (this.low != low) || (this.iconId != iconId)) {
-            PutDataMapRequest weatherDataMapRequest = PutDataMapRequest.create(DATA_MAP_WEATHER);
-            DataMap weatherRequestDataMap = weatherDataMapRequest.getDataMap();
-            weatherRequestDataMap.putDouble(DATA_MAP_WEATHER_KEY_HIGH, high);
-            weatherRequestDataMap.putDouble(DATA_MAP_WEATHER_KEY_LOW, low);
-            weatherRequestDataMap.putAsset(DATA_MAP_WEATHER_KEY_ICON, getWeatherIcon(iconId));
-            PutDataRequest weatherRequest = weatherDataMapRequest.asPutDataRequest();
-            weatherRequest.setUrgent();
-            Wearable.DataApi.putDataItem(googleApiClient, weatherRequest)
-                    .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
-                        @Override
-                        public void onResult(DataApi.DataItemResult dataItemResult) {
-                            if (!dataItemResult.getStatus().isSuccess()) {
-                                Log.d(TAG, "Failed to send weather data");
-                            } else {
-                                Log.d(TAG, "Successfully sent weather data");
-                            }
+        PutDataMapRequest dataMapRequest = PutDataMapRequest.create(DATA_MAP_WEATHER);
+        DataMap dataMap = dataMapRequest.getDataMap();
+        // time only used to make the request unique
+        dataMap.putLong("time", new Date().getTime());
+        dataMap.putString(DATA_MAP_WEATHER_KEY_HIGH, Utility.formatTemperature(getApplicationContext(), high));
+        dataMap.putString(DATA_MAP_WEATHER_KEY_LOW, Utility.formatTemperature(getApplicationContext(), high));
+        dataMap.putAsset(DATA_MAP_WEATHER_KEY_ICON, getWeatherIcon(iconId));
+        PutDataRequest weatherRequest = dataMapRequest.asPutDataRequest();
+        weatherRequest.setUrgent();
+        Wearable.DataApi.putDataItem(googleApiClient, weatherRequest)
+                .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
+                    @Override
+                    public void onResult(DataApi.DataItemResult dataItemResult) {
+                        if (!dataItemResult.getStatus().isSuccess()) {
+                            Log.d(TAG, "Failed to send weather data");
+                        } else {
+                            Log.d(TAG, "Successfully sent weather data");
                         }
-                    });
-            Log.d(TAG, "handleActionWearWeatherUpdate: high=" + high + " low=" + low);
-//        }
-        this.high = high;
-        this.low = low;
-        this.iconId = iconId;
+                    }
+                });
+        Log.d(TAG, "handleActionWearWeatherUpdate: high=" + high + " low=" + low);
+
     }
 
     private Asset getWeatherIcon(int weatherId) {

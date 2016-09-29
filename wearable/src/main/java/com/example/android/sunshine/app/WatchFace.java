@@ -142,8 +142,8 @@ public class WatchFace extends CanvasWatchFaceService {
         SimpleDateFormat timeFormatAmbient;
         String temperatureFormat;
 
-        int highTemperature = Integer.MAX_VALUE;
-        int lowTemperature = Integer.MIN_VALUE;
+        String highTemperature;
+        String lowTemperature;
         Bitmap weatherBitmap;
 
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -377,8 +377,6 @@ public class WatchFace extends CanvasWatchFaceService {
                     : timeFormat.format(date);
 
             String dateString = dateFormat.format(date);
-            String highTemperatureString = String.format(temperatureFormat, highTemperature);
-            String lowTemperatureString = String.format(temperatureFormat, lowTemperature);
 
             timeOffsetX = bounds.centerX() - (timePaint.measureText(timeString) / 2f);
             dateOffsetX = bounds.centerX() - (datePaint.measureText(dateString) / 2f);
@@ -387,11 +385,6 @@ public class WatchFace extends CanvasWatchFaceService {
             final float dividerOffsetStartX = bounds.centerX() - (dividerLength / 2f);
             final float dividerOffsetEndX = bounds.centerX() + (dividerLength / 2f);
 
-            // centered
-            final float highOffsetX = bounds.centerX() - (highPaint.measureText(highTemperatureString) / 2f);
-            // 3/4
-            final float lowOffsetX = (bounds.centerX() + (bounds.centerX() / 2f)) - (lowPaint.measureText(lowTemperatureString) / 2f);
-
             canvas.drawText(timeString, timeOffsetX, timeOffsetY, timePaint);
             canvas.drawText(dateString, dateOffsetX, dateOffsetY, datePaint);
 
@@ -399,9 +392,14 @@ public class WatchFace extends CanvasWatchFaceService {
                     dividerOffsetY, dividerPaint);
 
             // Check if weather info has been initialized
-            if (highTemperature <= 200) {
-                canvas.drawText(highTemperatureString, highOffsetX, weatherOffsetY, highPaint);
-                canvas.drawText(lowTemperatureString, lowOffsetX, weatherOffsetY, lowPaint);
+            if (highTemperature != null && !highTemperature.isEmpty()) {
+                // centered
+                final float highOffsetX = bounds.centerX() - (highPaint.measureText(highTemperature) / 2f);
+                // 3/4
+                final float lowOffsetX = (bounds.centerX() + (bounds.centerX() / 2f)) - (lowPaint.measureText(lowTemperature) / 2f);
+
+                canvas.drawText(highTemperature, highOffsetX, weatherOffsetY, highPaint);
+                canvas.drawText(lowTemperature, lowOffsetX, weatherOffsetY, lowPaint);
                 if (weatherBitmap != null) {
                     // 1/4
                     final float iconOffsetX = (bounds.centerX() - (bounds.centerX() / 2f)) - (weatherBitmap.getWidth() / 2f);
@@ -496,8 +494,8 @@ public class WatchFace extends CanvasWatchFaceService {
                     if (path.equals(DATA_MAP_WEATHER)) {
                         DataMapItem dataMapItem = DataMapItem.fromDataItem(dataEvent.getDataItem());
                         DataMap dataMap = dataMapItem.getDataMap();
-                        highTemperature = (int) dataMap.getDouble(DATA_MAP_WEATHER_KEY_HIGH,  Integer.MAX_VALUE);
-                        lowTemperature = (int) dataMap.getDouble(DATA_MAP_WEATHER_KEY_LOW, Integer.MIN_VALUE);
+                        highTemperature = dataMap.getString(DATA_MAP_WEATHER_KEY_HIGH, "");
+                        lowTemperature = dataMap.getString(DATA_MAP_WEATHER_KEY_LOW, "");
                         Asset iconAsset = dataMap.getAsset(DATA_MAP_WEATHER_KEY_ICON);
                         if (iconAsset != null) {
                             LoadBitmapTask loadBitmapTask = new LoadBitmapTask(googleApiClient, this);
