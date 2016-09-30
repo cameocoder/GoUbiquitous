@@ -392,7 +392,7 @@ public class WatchFace extends CanvasWatchFaceService {
                     dividerOffsetY, dividerPaint);
 
             // Check if weather info has been initialized
-            if (highTemperature != null && !highTemperature.isEmpty()) {
+            if (!isInAmbientMode() && highTemperature != null && !highTemperature.isEmpty()) {
                 // centered
                 final float highOffsetX = bounds.centerX() - (highPaint.measureText(highTemperature) / 2f);
                 // 3/4
@@ -445,8 +445,9 @@ public class WatchFace extends CanvasWatchFaceService {
 
         private void getWeatherData() {
             PutDataMapRequest weatherDataMapRequest = PutDataMapRequest.create(DATA_MAP_WEATHER_REQUEST);
-            DataMap weatherRequestDataMap = weatherDataMapRequest.getDataMap();
-            weatherRequestDataMap.putBoolean(DATA_MAP_WEATHER_REQUEST_KEY_GET_WEATHER, true);
+            DataMap dataMap = weatherDataMapRequest.getDataMap();
+            dataMap.putLong("time", new Date().getTime());
+            dataMap.putBoolean(DATA_MAP_WEATHER_REQUEST_KEY_GET_WEATHER, true);
             PutDataRequest weatherRequest = weatherDataMapRequest.asPutDataRequest();
             weatherRequest.setUrgent();
             Wearable.DataApi.putDataItem(googleApiClient, weatherRequest)
@@ -472,6 +473,7 @@ public class WatchFace extends CanvasWatchFaceService {
         @Override
         public void onConnected(@Nullable Bundle bundle) {
             Wearable.DataApi.addListener(googleApiClient, this);
+            getWeatherData();
         }
 
         @Override

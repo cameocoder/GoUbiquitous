@@ -99,7 +99,7 @@ public class SunshineWearIntentService extends IntentService implements
         // time only used to make the request unique
         dataMap.putLong("time", new Date().getTime());
         dataMap.putString(DATA_MAP_WEATHER_KEY_HIGH, Utility.formatTemperature(getApplicationContext(), high));
-        dataMap.putString(DATA_MAP_WEATHER_KEY_LOW, Utility.formatTemperature(getApplicationContext(), high));
+        dataMap.putString(DATA_MAP_WEATHER_KEY_LOW, Utility.formatTemperature(getApplicationContext(), low));
         dataMap.putAsset(DATA_MAP_WEATHER_KEY_ICON, getWeatherIcon(iconId));
         PutDataRequest weatherRequest = dataMapRequest.asPutDataRequest();
         weatherRequest.setUrgent();

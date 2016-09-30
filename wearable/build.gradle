@@ -20,11 +20,10 @@ android {
     }
 }
 
-// Could not send data to wearable emulator.  Rolled back until it seemed to work.
-def playVersion = '8.4.0'
+def playVersion = '9.6.1'
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.google.android.support:wearable:2.0.0-alpha2'
     compile "com.google.android.gms:play-services-wearable:$playVersion"
 }

@@ -25,9 +25,8 @@ android {
     }
 }
 
-def supportVersion = '23.3.0'
-// Could not send data to wearable emulator.  Rolled back until it seemed to work.
-def playVersion = '8.4.0'
+def supportVersion = '24.2.1'
+def playVersion = '9.6.1'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
