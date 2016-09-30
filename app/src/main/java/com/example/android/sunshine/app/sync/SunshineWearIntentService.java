@@ -128,8 +128,8 @@ public class SunshineWearIntentService extends IntentService implements
 
         PutDataMapRequest dataMapRequest = PutDataMapRequest.create(DATA_MAP_WEATHER);
         DataMap dataMap = dataMapRequest.getDataMap();
-        // Time only used to make the request unique.  Not sure if this is needed but was added
-        // because I could not get the #*@%$^$ data to sync
+        // Seems I need something unique to make the #*@%$^$ data sync
+        // Could use time to check for stale data
         dataMap.putLong("time", new Date().getTime());
         dataMap.putString(DATA_MAP_WEATHER_KEY_HIGH, Utility.formatTemperature(getApplicationContext(), high));
         dataMap.putString(DATA_MAP_WEATHER_KEY_LOW, Utility.formatTemperature(getApplicationContext(), low));

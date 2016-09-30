@@ -39,7 +39,6 @@ import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
-import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -117,10 +116,8 @@ public class WatchFace extends CanvasWatchFaceService {
         Paint timePaint;
         Paint datePaint;
         Paint dividerPaint;
-        Paint highPaint2;
-        Paint lowPaint2;
-        Paint highPaint3;
-        Paint lowPaint3;
+        Paint temperaturePaint2;
+        Paint temperaturePaint3;
 
         float timeOffsetX;
         float timeOffsetY;
@@ -188,18 +185,11 @@ public class WatchFace extends CanvasWatchFaceService {
             dividerPaint = new Paint();
             dividerPaint = createPaint(ContextCompat.getColor(getBaseContext(), R.color.divider));
 
-            highPaint2 = new Paint();
-            highPaint2 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.primary_text));
+            temperaturePaint2 = new Paint();
+            temperaturePaint2 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.primary_text));
 
-            highPaint3 = new Paint();
-            highPaint3 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.primary_text));
-
-            lowPaint2 = new Paint();
-            lowPaint2 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.secondary_text));
-
-            lowPaint3 = new Paint();
-            lowPaint3 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.secondary_text));
-
+            temperaturePaint3 = new Paint();
+            temperaturePaint3 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.primary_text));
 
             dividerOffsetY = resources.getDimension(R.dimen.digital_divider_offset_y);
             weatherOffsetY = resources.getDimension(R.dimen.digital_temp_offset_y);
@@ -306,10 +296,8 @@ public class WatchFace extends CanvasWatchFaceService {
 
             timePaint.setTextSize(timeTextSize);
             datePaint.setTextSize(dateTextSize);
-            highPaint2.setTextSize(tempTextSize2);
-            lowPaint2.setTextSize(tempTextSize2);
-            highPaint3.setTextSize(tempTextSize3);
-            lowPaint3.setTextSize(tempTextSize3);
+            temperaturePaint2.setTextSize(tempTextSize2);
+            temperaturePaint3.setTextSize(tempTextSize3);
         }
 
         @Override
@@ -345,6 +333,7 @@ public class WatchFace extends CanvasWatchFaceService {
          * Captures tap event (and tap type) and toggles the background color if the user finishes
          * a tap.
          */
+/*
         @Override
         public void onTapCommand(int tapType, int x, int y, long eventTime) {
             switch (tapType) {
@@ -363,6 +352,7 @@ public class WatchFace extends CanvasWatchFaceService {
             }
             invalidate();
         }
+*/
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
@@ -385,6 +375,7 @@ public class WatchFace extends CanvasWatchFaceService {
 
             timeOffsetX = bounds.centerX() - (timePaint.measureText(timeString) / 2f);
 
+            // TODO: center the time in ambient mode?
             canvas.drawText(timeString, timeOffsetX, timeOffsetY, timePaint);
 
             // Don't show date or weather in ambient mode
@@ -393,6 +384,7 @@ public class WatchFace extends CanvasWatchFaceService {
                 dateOffsetX = bounds.centerX() - (datePaint.measureText(dateString) / 2f);
                 canvas.drawText(dateString, dateOffsetX, dateOffsetY, datePaint);
 
+                // Divider length 1/5 of device width
                 final int dividerLength = bounds.width() / 5;
                 final float dividerOffsetStartX = bounds.centerX() - (dividerLength / 2f);
                 final float dividerOffsetEndX = bounds.centerX() + (dividerLength / 2f);
@@ -403,26 +395,25 @@ public class WatchFace extends CanvasWatchFaceService {
 //                lowTemperature = "188°";
                 // Check if weather info has been initialized
                 if (highTemperature != null && !highTemperature.isEmpty()) {
-                    Paint highPaint = highPaint2;
-                    Paint lowPaint = lowPaint2;
+                    Paint temperaturePaint = temperaturePaint2;
                     if (highTemperature.length() > 3 || lowTemperature.length() > 3) {
-                        highPaint = highPaint3;
-                        lowPaint = lowPaint3;
+                        temperaturePaint = temperaturePaint3;
                     }
                     // centered
-                    final float highOffsetX = bounds.centerX() - (highPaint.measureText(highTemperature) / 2f);
+                    final float highOffsetX = bounds.centerX() - (temperaturePaint.measureText(highTemperature) / 2f);
                     // 4/5
-                    final float lowOffsetX = ((bounds.width() / 5) * 4) - (lowPaint.measureText(lowTemperature) / 2f);
+                    final float lowOffsetX = ((bounds.width() / 5) * 4) - (temperaturePaint.measureText(lowTemperature) / 2f);
 
-                    canvas.drawText(highTemperature, highOffsetX, weatherOffsetY, highPaint);
-                    canvas.drawText(lowTemperature, lowOffsetX, weatherOffsetY, lowPaint);
+                    canvas.drawText(highTemperature, highOffsetX, weatherOffsetY, temperaturePaint);
+                    canvas.drawText(lowTemperature, lowOffsetX, weatherOffsetY, temperaturePaint);
+
                     if (weatherBitmap != null) {
                         // 1/5
                         final float iconOffsetX = ((bounds.width() / 5)) - (weatherBitmap.getWidth() / 2f);
                         // Icon is painted from the top. Text is painted from the bottom.
                         // We need to position the center of the icon with the center of the text.
                         Rect textBounds = new Rect();
-                        highPaint.getTextBounds(highTemperature, 0, 1, textBounds);
+                        temperaturePaint.getTextBounds(highTemperature, 0, 1, textBounds);
                         final float textCenter = textBounds.height() / 2;
                         final float iconCenter = weatherBitmap.getHeight() / 2;
                         final float textOffsetYCenter = weatherOffsetY - textCenter;
@@ -432,7 +423,7 @@ public class WatchFace extends CanvasWatchFaceService {
 //                        canvas.drawLine(dividerOffsetStartX, weatherOffsetY, dividerOffsetEndX,
 //                                weatherOffsetY, dividerPaint);
                         final float iconOffsetY = textOffsetYCenter - iconCenter;
-                        canvas.drawBitmap(weatherBitmap, iconOffsetX, iconOffsetY, highPaint);
+                        canvas.drawBitmap(weatherBitmap, iconOffsetX, iconOffsetY, temperaturePaint);
                     }
                 }
             }
@@ -474,6 +465,7 @@ public class WatchFace extends CanvasWatchFaceService {
         private void getWeatherData() {
             PutDataMapRequest weatherDataMapRequest = PutDataMapRequest.create(DATA_MAP_WEATHER_REQUEST);
             DataMap dataMap = weatherDataMapRequest.getDataMap();
+            // Seems I need something unique to make the #*@%$^$ data sync
             dataMap.putLong("time", new Date().getTime());
             PutDataRequest weatherRequest = weatherDataMapRequest.asPutDataRequest();
             weatherRequest.setUrgent();
