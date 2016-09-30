@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="digital_time_text_size">40dp</dimen>
+    <dimen name="digital_time_text_size">36dp</dimen>
     <dimen name="digital_time_text_size_round">40dp</dimen>
 
-    <dimen name="date_text_size">20dp</dimen>
+    <dimen name="date_text_size">18dp</dimen>
     <dimen name="date_text_size_round">20dp</dimen>
 
-    <dimen name="digital_temp_text_size">30dp</dimen>
-    <dimen name="digital_temp_text_size_round">30dp</dimen>
+    <!--Use a larger font size for 2 digit temps-->
+    <dimen name="digital_temp_text_size_2">30dp</dimen>
+    <dimen name="digital_temp_text_size_round_2">34dp</dimen>
+
+    <dimen name="digital_temp_text_size_3">24dp</dimen>
+    <dimen name="digital_temp_text_size_round_3">28dp</dimen>
 
     <dimen name="digital_time_offset_y">80dp</dimen>
 

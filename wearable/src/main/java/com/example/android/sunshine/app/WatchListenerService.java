@@ -57,7 +57,9 @@ public class WatchListenerService extends WearableListenerService {
                         bitmap = loadBitmapFromAsset(iconAsset);
                     }
 
-                    weatherUpdatedListener.onWeatherUpdateFinished(highTemperature, lowTemperature, bitmap);
+                    if (weatherUpdatedListener != null) {
+                        weatherUpdatedListener.onWeatherUpdateFinished(highTemperature, lowTemperature, bitmap);
+                    }
                     Log.d(TAG, "onDataChanged: high=" + highTemperature + " low=" + lowTemperature);
                 }
             }

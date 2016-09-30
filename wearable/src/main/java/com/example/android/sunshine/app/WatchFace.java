@@ -117,8 +117,10 @@ public class WatchFace extends CanvasWatchFaceService {
         Paint timePaint;
         Paint datePaint;
         Paint dividerPaint;
-        Paint highPaint;
-        Paint lowPaint;
+        Paint highPaint2;
+        Paint lowPaint2;
+        Paint highPaint3;
+        Paint lowPaint3;
 
         float timeOffsetX;
         float timeOffsetY;
@@ -186,11 +188,17 @@ public class WatchFace extends CanvasWatchFaceService {
             dividerPaint = new Paint();
             dividerPaint = createPaint(ContextCompat.getColor(getBaseContext(), R.color.divider));
 
-            highPaint = new Paint();
-            highPaint = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.primary_text));
+            highPaint2 = new Paint();
+            highPaint2 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.primary_text));
 
-            lowPaint = new Paint();
-            lowPaint = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.secondary_text));
+            highPaint3 = new Paint();
+            highPaint3 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.primary_text));
+
+            lowPaint2 = new Paint();
+            lowPaint2 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.secondary_text));
+
+            lowPaint3 = new Paint();
+            lowPaint3 = createTextPaint(ContextCompat.getColor(getBaseContext(), R.color.secondary_text));
 
 
             dividerOffsetY = resources.getDimension(R.dimen.digital_divider_offset_y);
@@ -290,13 +298,18 @@ public class WatchFace extends CanvasWatchFaceService {
             float dateTextSize = resources.getDimension(isRound
                     ? R.dimen.date_text_size_round : R.dimen.date_text_size);
 
-            float tempTextSize = resources.getDimension(isRound
-                    ? R.dimen.digital_temp_text_size_round : R.dimen.digital_temp_text_size);
+            float tempTextSize2 = resources.getDimension(isRound
+                    ? R.dimen.digital_temp_text_size_round_2 : R.dimen.digital_temp_text_size_2);
+
+            float tempTextSize3 = resources.getDimension(isRound
+                    ? R.dimen.digital_temp_text_size_round_3 : R.dimen.digital_temp_text_size_3);
 
             timePaint.setTextSize(timeTextSize);
             datePaint.setTextSize(dateTextSize);
-            highPaint.setTextSize(tempTextSize);
-            lowPaint.setTextSize(tempTextSize);
+            highPaint2.setTextSize(tempTextSize2);
+            lowPaint2.setTextSize(tempTextSize2);
+            highPaint3.setTextSize(tempTextSize3);
+            lowPaint3.setTextSize(tempTextSize3);
         }
 
         @Override
@@ -386,20 +399,39 @@ public class WatchFace extends CanvasWatchFaceService {
                 canvas.drawLine(dividerOffsetStartX, dividerOffsetY, dividerOffsetEndX,
                         dividerOffsetY, dividerPaint);
 
+//                highTemperature = "188°";
+//                lowTemperature = "188°";
                 // Check if weather info has been initialized
                 if (highTemperature != null && !highTemperature.isEmpty()) {
+                    Paint highPaint = highPaint2;
+                    Paint lowPaint = lowPaint2;
+                    if (highTemperature.length() > 3 || lowTemperature.length() > 3) {
+                        highPaint = highPaint3;
+                        lowPaint = lowPaint3;
+                    }
                     // centered
                     final float highOffsetX = bounds.centerX() - (highPaint.measureText(highTemperature) / 2f);
-                    // 3/4
-                    final float lowOffsetX = (bounds.centerX() + (bounds.centerX() / 2f)) - (lowPaint.measureText(lowTemperature) / 2f);
+                    // 4/5
+                    final float lowOffsetX = ((bounds.width() / 5) * 4) - (lowPaint.measureText(lowTemperature) / 2f);
 
                     canvas.drawText(highTemperature, highOffsetX, weatherOffsetY, highPaint);
                     canvas.drawText(lowTemperature, lowOffsetX, weatherOffsetY, lowPaint);
                     if (weatherBitmap != null) {
-                        // 1/4
-                        final float iconOffsetX = (bounds.centerX() - (bounds.centerX() / 2f)) - (weatherBitmap.getWidth() / 2f);
-                        // top corner of icon drawn at top corner of the temperature text
-                        final float iconOffsetY = weatherOffsetY - highPaint.getTextSize();
+                        // 1/5
+                        final float iconOffsetX = ((bounds.width() / 5)) - (weatherBitmap.getWidth() / 2f);
+                        // Icon is painted from the top. Text is painted from the bottom.
+                        // We need to position the center of the icon with the center of the text.
+                        Rect textBounds = new Rect();
+                        highPaint.getTextBounds(highTemperature, 0, 1, textBounds);
+                        final float textCenter = textBounds.height() / 2;
+                        final float iconCenter = weatherBitmap.getHeight() / 2;
+                        final float textOffsetYCenter = weatherOffsetY - textCenter;
+                        // Guide lines for figuring out layout
+//                        canvas.drawLine(dividerOffsetStartX, textOffsetYCenter, dividerOffsetEndX,
+//                                textOffsetYCenter, dividerPaint);
+//                        canvas.drawLine(dividerOffsetStartX, weatherOffsetY, dividerOffsetEndX,
+//                                weatherOffsetY, dividerPaint);
+                        final float iconOffsetY = textOffsetYCenter - iconCenter;
                         canvas.drawBitmap(weatherBitmap, iconOffsetX, iconOffsetY, highPaint);
                     }
                 }
