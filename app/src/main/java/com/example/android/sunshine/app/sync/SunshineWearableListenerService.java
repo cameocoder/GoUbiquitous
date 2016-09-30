@@ -3,17 +3,17 @@ package com.example.android.sunshine.app.sync;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.WearableListenerService;
 
+/**
+ * Receive weather update request from watch and send update back to watch
+ */
 public class SunshineWearableListenerService extends WearableListenerService {
     private static final String TAG = SunshineWearableListenerService.class.getSimpleName();
     private static final String DATA_MAP_WEATHER_REQUEST = "/forecast_request";
-
-    private GoogleApiClient mGoogleApiClient;
 
     public SunshineWearableListenerService() {
         Log.d(TAG, "SunshineWearableListenerService: ");

@@ -44,12 +44,8 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataApi;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataMap;
-import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
@@ -83,12 +79,7 @@ public class WatchFace extends CanvasWatchFaceService {
      */
     private static final int MSG_UPDATE_TIME = 0;
 
-    private static final String DATA_MAP_WEATHER = "/forecast";
     private static final String DATA_MAP_WEATHER_REQUEST = "/forecast_request";
-    private static final String DATA_MAP_WEATHER_KEY_HIGH = "high";
-    private static final String DATA_MAP_WEATHER_KEY_LOW = "low";
-    private static final String DATA_MAP_WEATHER_KEY_ICON = "icon";
-    private static final String DATA_MAP_WEATHER_REQUEST_KEY_GET_WEATHER = "get_weather";
 
     @Override
     public Engine onCreateEngine() {
@@ -115,8 +106,9 @@ public class WatchFace extends CanvasWatchFaceService {
         }
     }
 
-    private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener,
-            GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LoadBitmapTask.LoadBitmapListener {
+    private class Engine extends CanvasWatchFaceService.Engine implements
+            GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+            WatchListenerService.WeatherUpdatedListener {
         final Handler mUpdateTimeHandler = new EngineHandler(this);
         boolean mRegisteredTimeZoneReceiver = false;
         boolean mAmbient;
@@ -170,7 +162,7 @@ public class WatchFace extends CanvasWatchFaceService {
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-///            startService(new Intent(getApplicationContext(), SunshineWearableListenerService.class));
+            WatchListenerService.setWeatherUpdatedListener(this);
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(WatchFace.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
@@ -247,6 +239,7 @@ public class WatchFace extends CanvasWatchFaceService {
             if (visible) {
                 registerReceiver();
                 googleApiClient.connect();
+                getWeatherData();
 
                 // Update time zone in case it changed while we weren't visible.
                 mCalendar.setTimeZone(TimeZone.getDefault());
@@ -447,7 +440,6 @@ public class WatchFace extends CanvasWatchFaceService {
             PutDataMapRequest weatherDataMapRequest = PutDataMapRequest.create(DATA_MAP_WEATHER_REQUEST);
             DataMap dataMap = weatherDataMapRequest.getDataMap();
             dataMap.putLong("time", new Date().getTime());
-            dataMap.putBoolean(DATA_MAP_WEATHER_REQUEST_KEY_GET_WEATHER, true);
             PutDataRequest weatherRequest = weatherDataMapRequest.asPutDataRequest();
             weatherRequest.setUrgent();
             Wearable.DataApi.putDataItem(googleApiClient, weatherRequest)
@@ -465,53 +457,30 @@ public class WatchFace extends CanvasWatchFaceService {
 
         private void removeDataApiListener() {
             if (googleApiClient != null && googleApiClient.isConnected()) {
-                Wearable.DataApi.removeListener(googleApiClient, this);
                 googleApiClient.disconnect();
             }
         }
 
         @Override
         public void onConnected(@Nullable Bundle bundle) {
-            Wearable.DataApi.addListener(googleApiClient, this);
+            googleApiClient.connect();
             getWeatherData();
         }
 
         @Override
         public void onConnectionSuspended(int i) {
-
+            Log.d(TAG, "onConnectionSuspended: ");
         }
 
         @Override
         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+            Log.d(TAG, "onConnectionFailed: ");
         }
 
         @Override
-        public void onDataChanged(DataEventBuffer dataEventBuffer) {
-            Log.d(TAG, "onDataChanged: ");
-            for (DataEvent dataEvent : dataEventBuffer) {
-                if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
-                    String path = dataEvent.getDataItem().getUri().getPath();
-                    Log.d(TAG, "onDataChanged: " + path);
-                    if (path.equals(DATA_MAP_WEATHER)) {
-                        DataMapItem dataMapItem = DataMapItem.fromDataItem(dataEvent.getDataItem());
-                        DataMap dataMap = dataMapItem.getDataMap();
-                        highTemperature = dataMap.getString(DATA_MAP_WEATHER_KEY_HIGH, "");
-                        lowTemperature = dataMap.getString(DATA_MAP_WEATHER_KEY_LOW, "");
-                        Asset iconAsset = dataMap.getAsset(DATA_MAP_WEATHER_KEY_ICON);
-                        if (iconAsset != null) {
-                            LoadBitmapTask loadBitmapTask = new LoadBitmapTask(googleApiClient, this);
-                            loadBitmapTask.execute(iconAsset);
-                        }
-                        Log.d(TAG, "onDataChanged: high=" + highTemperature + " low=" + lowTemperature);
-                        invalidate();
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onLoadBitmapFinished(Bitmap bitmap) {
+        public void onWeatherUpdateFinished(String high, String low, Bitmap bitmap) {
+            highTemperature = high;
+            lowTemperature = low;
             weatherBitmap = bitmap;
             invalidate();
         }

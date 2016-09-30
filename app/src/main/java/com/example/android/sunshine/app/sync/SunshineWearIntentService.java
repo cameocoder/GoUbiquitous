@@ -31,7 +31,8 @@ import java.util.Date;
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  * <p>
- * helper methods.
+ * startActionWearCurrentWeatherUpdate - Send current weather to wearable
+ * startActionWearWeatherUpdate - Send specified weather update to wearable
  */
 public class SunshineWearIntentService extends IntentService implements
         GoogleApiClient.ConnectionCallbacks,
