@@ -1,5 +1,6 @@
 package com.example.android.sunshine.app.sync;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -11,7 +12,6 @@ import com.google.android.gms.wearable.WearableListenerService;
 public class SunshineWearableListenerService extends WearableListenerService {
     private static final String TAG = SunshineWearableListenerService.class.getSimpleName();
     private static final String DATA_MAP_WEATHER_REQUEST = "/forecast_request";
-    private static final String DATA_MAP_WEATHER_REQUEST_KEY_GET_WEATHER = "get_weather";
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -26,11 +26,10 @@ public class SunshineWearableListenerService extends WearableListenerService {
             if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
                 DataItem item = dataEvent.getDataItem();
                 if (item.getUri().getPath().compareTo(DATA_MAP_WEATHER_REQUEST) == 0) {
-//                    DataMapItem dataMapItem = DataMapItem.fromDataItem(dataEvent.getDataItem());
-//                    DataMap dataMap = dataMapItem.getDataMap();
-//                    boolean getWeather = dataMap.getBoolean(DATA_MAP_WEATHER_REQUEST_KEY_GET_WEATHER, false);
                     Log.d(TAG, "onDataChanged: syncImmediately");
-                    SunshineSyncAdapter.syncImmediately(this);
+                    Context context = getApplicationContext();
+                    SunshineWearIntentService.startActionWearCurrentWeatherUpdate(context);
+//                    SunshineSyncAdapter.syncImmediately(this);
                 }
             }
         }

@@ -486,24 +486,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void notifyWear() {
         Context context = getContext();
-
-        String locationQuery = Utility.getPreferredLocation(context);
-
-        Uri weatherUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(locationQuery, System.currentTimeMillis());
-
-        // we'll query our contentProvider, as always
-        Cursor cursor = context.getContentResolver().query(weatherUri, NOTIFY_WEATHER_PROJECTION, null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            int weatherId = cursor.getInt(INDEX_WEATHER_ID);
-            double high = cursor.getDouble(INDEX_MAX_TEMP);
-            double low = cursor.getDouble(INDEX_MIN_TEMP);
-
-            // We just fetched the data we need, so send it to the wear device
-            Log.d(LOG_TAG, "notifyWear: startActionWearWeatherUpdate");
-            SunshineWearIntentService.startActionWearWeatherUpdate(context, high, low, weatherId);
-        }
-        cursor.close();
+        SunshineWearIntentService.startActionWearCurrentWeatherUpdate(context);
     }
 
     /**

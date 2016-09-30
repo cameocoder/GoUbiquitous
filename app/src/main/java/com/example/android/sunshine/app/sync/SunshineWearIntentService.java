@@ -3,14 +3,17 @@ package com.example.android.sunshine.app.sync;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.example.android.sunshine.app.Utility;
+import com.example.android.sunshine.app.data.WeatherContract;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -35,7 +38,20 @@ public class SunshineWearIntentService extends IntentService implements
         GoogleApiClient.OnConnectionFailedListener {
     private final String TAG = SunshineWearIntentService.class.getSimpleName();
 
+    private static final String WEATHER_UPDATE_CURRENT = "com.example.android.sunshine.app.sync.action.current_weather_update";
     private static final String WEATHER_UPDATE = "com.example.android.sunshine.app.sync.action.weather_update";
+
+    private static final String[] NOTIFY_WEATHER_PROJECTION = new String[] {
+            WeatherContract.WeatherEntry.COLUMN_WEATHER_ID,
+            WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_MIN_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_SHORT_DESC
+    };
+
+    // these indices must match the projection
+    private static final int INDEX_WEATHER_ID = 0;
+    private static final int INDEX_MAX_TEMP = 1;
+    private static final int INDEX_MIN_TEMP = 2;
 
     private static final String EXTRA_ID = "com.example.android.sunshine.app.sync.extra.id";
     private static final String EXTRA_HIGH = "com.example.android.sunshine.app.sync.extra.high";
@@ -53,7 +69,19 @@ public class SunshineWearIntentService extends IntentService implements
     }
 
     /**
-     * Starts this service to perform action Foo with the given parameters. If
+     * Starts this service to perform action WEATHER_UPDATE_CURRENT with the given parameters. If
+     * the service is already performing a task this action will be queued.
+     *
+     * @see IntentService
+     */
+    public static void startActionWearCurrentWeatherUpdate(Context context) {
+        Intent intent = new Intent(context, SunshineWearIntentService.class);
+        intent.setAction(WEATHER_UPDATE_CURRENT);
+        context.startService(intent);
+    }
+
+    /**
+     * Starts this service to perform action WEATHER_UPDATE with the given parameters. If
      * the service is already performing a task this action will be queued.
      *
      * @see IntentService
@@ -71,7 +99,10 @@ public class SunshineWearIntentService extends IntentService implements
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (WEATHER_UPDATE.equals(action)) {
+            if (WEATHER_UPDATE_CURRENT.equals(action)) {
+                getCurrentWeather();
+            }
+             else if (WEATHER_UPDATE.equals(action)) {
                 final double high = intent.getDoubleExtra(EXTRA_HIGH, Integer.MAX_VALUE);
                 final double low = intent.getDoubleExtra(EXTRA_LOW, Integer.MIN_VALUE);
                 final int iconId = intent.getIntExtra(EXTRA_ICON_ID, -1);
@@ -140,4 +171,25 @@ public class SunshineWearIntentService extends IntentService implements
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
+    private void getCurrentWeather() {
+        Context context = getApplicationContext();
+
+        String locationQuery = Utility.getPreferredLocation(context);
+
+        Uri weatherUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(locationQuery, System.currentTimeMillis());
+
+        // we'll query our contentProvider, as always
+        Cursor cursor = context.getContentResolver().query(weatherUri, NOTIFY_WEATHER_PROJECTION, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int weatherId = cursor.getInt(INDEX_WEATHER_ID);
+            double high = cursor.getDouble(INDEX_MAX_TEMP);
+            double low = cursor.getDouble(INDEX_MIN_TEMP);
+
+            handleActionWearWeatherUpdate(high, low, weatherId);
+        }
+        cursor.close();
+    }
+
 }
