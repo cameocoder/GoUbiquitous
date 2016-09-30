@@ -369,36 +369,39 @@ public class WatchFace extends CanvasWatchFaceService {
                     ? timeFormatAmbient.format(date)
                     : timeFormat.format(date);
 
-            String dateString = dateFormat.format(date);
 
             timeOffsetX = bounds.centerX() - (timePaint.measureText(timeString) / 2f);
-            dateOffsetX = bounds.centerX() - (datePaint.measureText(dateString) / 2f);
-
-            final int dividerLength = bounds.width() / 5;
-            final float dividerOffsetStartX = bounds.centerX() - (dividerLength / 2f);
-            final float dividerOffsetEndX = bounds.centerX() + (dividerLength / 2f);
 
             canvas.drawText(timeString, timeOffsetX, timeOffsetY, timePaint);
-            canvas.drawText(dateString, dateOffsetX, dateOffsetY, datePaint);
 
-            canvas.drawLine(dividerOffsetStartX, dividerOffsetY, dividerOffsetEndX,
-                    dividerOffsetY, dividerPaint);
+            // Don't show date or weather in ambient mode
+            if (!isInAmbientMode()) {
+                String dateString = dateFormat.format(date);
+                dateOffsetX = bounds.centerX() - (datePaint.measureText(dateString) / 2f);
+                canvas.drawText(dateString, dateOffsetX, dateOffsetY, datePaint);
 
-            // Check if weather info has been initialized
-            if (!isInAmbientMode() && highTemperature != null && !highTemperature.isEmpty()) {
-                // centered
-                final float highOffsetX = bounds.centerX() - (highPaint.measureText(highTemperature) / 2f);
-                // 3/4
-                final float lowOffsetX = (bounds.centerX() + (bounds.centerX() / 2f)) - (lowPaint.measureText(lowTemperature) / 2f);
+                final int dividerLength = bounds.width() / 5;
+                final float dividerOffsetStartX = bounds.centerX() - (dividerLength / 2f);
+                final float dividerOffsetEndX = bounds.centerX() + (dividerLength / 2f);
+                canvas.drawLine(dividerOffsetStartX, dividerOffsetY, dividerOffsetEndX,
+                        dividerOffsetY, dividerPaint);
 
-                canvas.drawText(highTemperature, highOffsetX, weatherOffsetY, highPaint);
-                canvas.drawText(lowTemperature, lowOffsetX, weatherOffsetY, lowPaint);
-                if (weatherBitmap != null) {
-                    // 1/4
-                    final float iconOffsetX = (bounds.centerX() - (bounds.centerX() / 2f)) - (weatherBitmap.getWidth() / 2f);
-                    // top corner of icon drawn at top corner of the temperature text
-                    final float iconOffsetY = weatherOffsetY - highPaint.getTextSize();
-                    canvas.drawBitmap(weatherBitmap, iconOffsetX, iconOffsetY, highPaint);
+                // Check if weather info has been initialized
+                if (highTemperature != null && !highTemperature.isEmpty()) {
+                    // centered
+                    final float highOffsetX = bounds.centerX() - (highPaint.measureText(highTemperature) / 2f);
+                    // 3/4
+                    final float lowOffsetX = (bounds.centerX() + (bounds.centerX() / 2f)) - (lowPaint.measureText(lowTemperature) / 2f);
+
+                    canvas.drawText(highTemperature, highOffsetX, weatherOffsetY, highPaint);
+                    canvas.drawText(lowTemperature, lowOffsetX, weatherOffsetY, lowPaint);
+                    if (weatherBitmap != null) {
+                        // 1/4
+                        final float iconOffsetX = (bounds.centerX() - (bounds.centerX() / 2f)) - (weatherBitmap.getWidth() / 2f);
+                        // top corner of icon drawn at top corner of the temperature text
+                        final float iconOffsetY = weatherOffsetY - highPaint.getTextSize();
+                        canvas.drawBitmap(weatherBitmap, iconOffsetX, iconOffsetY, highPaint);
+                    }
                 }
             }
 
