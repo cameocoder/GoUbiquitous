@@ -119,9 +119,7 @@ public class WatchFace extends CanvasWatchFaceService {
         Paint temperaturePaint2;
         Paint temperaturePaint3;
 
-        float timeOffsetX;
         float timeOffsetY;
-        float dateOffsetX;
         float dateOffsetY;
         float dividerOffsetY;
 
@@ -277,12 +275,6 @@ public class WatchFace extends CanvasWatchFaceService {
             Resources resources = WatchFace.this.getResources();
             boolean isRound = insets.isRound();
 
-//            timeOffsetX = resources.getDimension(isRound
-//                    ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
-//
-//            dateOffsetX = resources.getDimension(isRound
-//                    ? R.dimen.digital_x_offset_date_round : R.dimen.digital_x_offset_date);
-
             float timeTextSize = resources.getDimension(isRound
                     ? R.dimen.digital_time_text_size_round : R.dimen.digital_time_text_size);
             float dateTextSize = resources.getDimension(isRound
@@ -373,7 +365,7 @@ public class WatchFace extends CanvasWatchFaceService {
                     : timeFormat.format(date);
 
 
-            timeOffsetX = bounds.centerX() - (timePaint.measureText(timeString) / 2f);
+            final float timeOffsetX = bounds.centerX() - (timePaint.measureText(timeString) / 2f);
 
             // TODO: center the time in ambient mode?
             canvas.drawText(timeString, timeOffsetX, timeOffsetY, timePaint);
@@ -381,7 +373,7 @@ public class WatchFace extends CanvasWatchFaceService {
             // Don't show date or weather in ambient mode
             if (!isInAmbientMode()) {
                 String dateString = dateFormat.format(date);
-                dateOffsetX = bounds.centerX() - (datePaint.measureText(dateString) / 2f);
+                final float dateOffsetX = bounds.centerX() - (datePaint.measureText(dateString) / 2f);
                 canvas.drawText(dateString, dateOffsetX, dateOffsetY, datePaint);
 
                 // Divider length 1/5 of device width
